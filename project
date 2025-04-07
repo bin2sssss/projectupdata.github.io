@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>毕业设计进度管理系统</title>
+    <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            background: #f5f6fa;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+
+        /* 导航栏 */
+        nav {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            border-radius: 5px;
+        }
+
+        /* 进度卡片 */
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        /* 个人进度条 */
+        .progress-bar {
+            height: 20px;
+            background: #eee;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--secondary-color);
+            transition: width 0.3s ease;
+        }
+
+        /* 成员网格布局 */
+        .members-grid {
+            display: grid;
+            gap: 1rem;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        }
+
+        /* 时间轴 */
+        .timeline {
+            border-left: 2px solid #ddd;
+            padding-left: 2rem;
+            margin: 2rem 0;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+
+        .timeline-item::before {
+            content: "";
+            position: absolute;
+            left: -2.7rem;
+            top: 1rem;
+            width: 20px;
+            height: 20px;
+            background: var(--secondary-color);
+            border-radius: 50%;
+        }
+
+        /* 任务列表 */
+        .task-list {
+            list-style: none;
+        }
+
+        .task-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.8rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .status {
+            padding: 0.2rem 0.5rem;
+            border-radius: 15px;
+            font-size: 0.8em;
+        }
+
+        .status.pending { background: #ff7979; color: white; }
+        .status.in-progress { background: #7ed6df; color: white; }
+        .status.completed { background: #6ab04c; color: white; }
+    </style>
+</head>
+<body>
+    <nav>
+        <h1>毕业设计进度管理 <i class="fas fa-tasks"></i></h1>
+    </nav>
+
+    <div class="container">
+        <!-- 个人进度 -->
+        <div class="card">
+            <h2>个人进度 <i class="fas fa-user"></i></h2>
+            <div class="members-grid" id="membersContainer"></div>
+        </div>
+
+        <!-- 综合进度 -->
+        <div class="card">
+            <h2>项目时间轴 <i class="fas fa-chart-line"></i></h2>
+            <div class="timeline" id="timeline"></div>
+        </div>
+
+        <!-- 杂项汇总 -->
+        <div class="card">
+            <h2>待办事项 <i class="fas fa-clipboard-list"></i></h2>
+            <ul class="task-list" id="taskList"></ul>
+        </div>
+    </div>
+
+    <script>
+        // 成员数据
+        const members = [
+            { name: "张三", role: "后端开发", progress: 75, update: "完成API设计" },
+            { name: "李四", role: "前端开发", progress: 60, update: "完成主页框架" },
+            { name: "王五", role: "数据分析", progress: 85, update: "完成数据集清洗" },
+            { name: "赵六", role: "UI设计", progress: 90, update: "提交终版设计稿" },
+            { name: "陈七", role: "项目管理", progress: 95, update: "整理验收文档" }
+        ];
+
+        // 时间轴数据
+        const timeline = [
+            { date: "2024-03-01", title: "项目启动", progress: 100 },
+            { date: "2024-04-15", title: "原型设计完成", progress: 100 },
+            { date: "2024-05-10", title: "核心功能开发", progress: 75 },
+            { date: "2024-06-01", title: "系统联调测试", progress: 30 }
+        ];
+
+        // 任务数据
+        const tasks = [
+            { name: "用户手册编写", assignee: "陈七", status: "pending" },
+            { name: "压力测试", assignee: "张三", status: "in-progress" },
+            { name: "答辩PPT制作", assignee: "赵六", status: "completed" }
+        ];
+
+        // 渲染成员进度
+        function renderMembers() {
+            const container = document.getElementById('membersContainer');
+            container.innerHTML = members.map(member => `
+                <div class="card">
+                    <h3>${member.name} <small>(${member.role})</small></h3>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${member.progress}%"></div>
+                    </div>
+                    <p>当前进度：${member.progress}%</p>
+                    <p><i class="fas fa-comment"></i> 最近更新：${member.update}</p>
+                </div>
+            `).join('');
+        }
+
+        // 渲染时间轴
+        function renderTimeline() {
+            const container = document.getElementById('timeline');
+            container.innerHTML = timeline.map(item => `
+                <div class="timeline-item">
+                    <h3>${item.title}</h3>
+                    <p>${item.date}</p>
+                    <div class="progress-bar" style="margin: 10px 0">
+                        <div class="progress-fill" style="width: ${item.progress}%"></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 渲染任务列表
+        function renderTasks() {
+            const container = document.getElementById('taskList');
+            container.innerHTML = tasks.map(task => `
+                <li class="task-item">
+                    <div>
+                        <strong>${task.name}</strong><br>
+                        <small>负责人：${task.assignee}</small>
+                    </div>
+                    <span class="status ${task.status.replace(' ', '-')}">
+                        ${task.status === 'pending' ? '未开始' : 
+                         task.status === 'in-progress' ? '进行中' : '已完成'}
+                    </span>
+                </li>
+            `).join('');
+        }
+
+        // 初始化渲染
+        window.onload = () => {
+            renderMembers();
+            renderTimeline();
+            renderTasks();
+        };
+    </script>
+</body>
+</html>
